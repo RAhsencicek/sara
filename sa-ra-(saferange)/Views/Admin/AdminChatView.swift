@@ -14,14 +14,7 @@ struct MockChat: Identifiable {
     let lastMessage: String
     let lastMessageTime: String
     let unreadCount: Int
-    let messages: [MockMessage]
-}
-
-struct MockMessage: Identifiable {
-    let id: String
-    let content: String
-    let timestamp: Date
-    let isFromAdmin: Bool
+    let messages: [Message]
 }
 
 struct AdminChatView: View {
@@ -171,9 +164,9 @@ struct AdminChatView: View {
                 lastMessageTime: "14:30",
                 unreadCount: 3,
                 messages: [
-                    MockMessage(id: "1", content: "Merhaba grup!", timestamp: Date(), isFromAdmin: true),
-                    MockMessage(id: "2", content: "Yarın saat 9'da buluşuyoruz", timestamp: Date(), isFromAdmin: true),
-                    MockMessage(id: "3", content: "Tamam, teşekkürler", timestamp: Date(), isFromAdmin: false)
+                    Message(content: "Merhaba grup!", senderName: "Admin", isFromAdmin: true),
+                    Message(content: "Yarın saat 9'da buluşuyoruz", senderName: "Admin", isFromAdmin: true),
+                    Message(content: "Tamam, teşekkürler", senderName: "Ahmet Yılmaz")
                 ]
             ),
             MockChat(
@@ -183,8 +176,8 @@ struct AdminChatView: View {
                 lastMessageTime: "13:15",
                 unreadCount: 0,
                 messages: [
-                    MockMessage(id: "4", content: "Herkese iyi günler", timestamp: Date(), isFromAdmin: true),
-                    MockMessage(id: "5", content: "Hava durumu nasıl?", timestamp: Date(), isFromAdmin: false)
+                    Message(content: "Herkese iyi günler", senderName: "Admin", isFromAdmin: true),
+                    Message(content: "Hava durumu nasıl?", senderName: "Mehmet Demir")
                 ]
             )
         ]
@@ -196,91 +189,69 @@ struct ChatRowView: View {
     
     var body: some View {
         HStack {
-            // Grup ikonu
-            Circle()
-                .fill(.blue.opacity(0.2))
-                .frame(width: 50, height: 50)
-                .overlay {
-                    Text(chat.groupName.prefix(1))
-                        .font(.title2)
-                        .foregroundStyle(.blue)
-                }
-            
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading) {
                 Text(chat.groupName)
                     .font(.headline)
                 Text(chat.lastMessage)
                     .font(.subheadline)
                     .foregroundStyle(.gray)
-                    .lineLimit(1)
             }
             
             Spacer()
             
-            // Zaman ve okunmamış mesaj sayısı
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing) {
                 Text(chat.lastMessageTime)
                     .font(.caption)
                     .foregroundStyle(.gray)
                 
                 if chat.unreadCount > 0 {
                     Text("\(chat.unreadCount)")
-                        .font(.caption)
-                        .foregroundStyle(.white)
+                        .font(.caption2)
                         .padding(6)
                         .background(.blue)
+                        .foregroundStyle(.white)
                         .clipShape(Circle())
                 }
             }
         }
-        .padding(.vertical, 4)
     }
 }
 
 struct ChatDetailView: View {
     let chat: MockChat
-    @Environment(\.dismiss) var dismiss
     @State private var newMessage = ""
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
-            VStack {
-                List(chat.messages) { message in
-                    MessageBubbleView(message: message)
-                }
+        VStack {
+            List(chat.messages) { message in
+                MessageBubbleView(message: message)
+            }
+            
+            HStack {
+                TextField("Mesajınız...", text: $newMessage)
+                    .textFieldStyle(.roundedBorder)
                 
-                // Mesaj gönderme alanı
-                HStack {
-                    TextField("Mesajınız...", text: $newMessage)
-                        .textFieldStyle(.roundedBorder)
-                    
-                    Button(action: sendMessage) {
-                        Image(systemName: "paperplane.fill")
-                            .foregroundStyle(.blue)
-                    }
+                Button(action: sendMessage) {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundStyle(.blue)
                 }
-                .padding()
+                .disabled(newMessage.isEmpty)
             }
-            .navigationTitle(chat.groupName)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Kapat") {
-                        dismiss()
-                    }
-                }
-            }
+            .padding()
         }
+        .navigationTitle(chat.groupName)
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func sendMessage() {
-        // TODO: Implement message sending
+        // TODO: Implement sending message
         newMessage = ""
     }
 }
 
 struct MessageBubbleView: View {
-    let message: MockMessage
+    let message: Message
     
     var body: some View {
         HStack {
@@ -288,11 +259,19 @@ struct MessageBubbleView: View {
                 Spacer()
             }
             
-            Text(message.content)
-                .padding(10)
-                .background(message.isFromAdmin ? .blue : .gray.opacity(0.2))
-                .foregroundStyle(message.isFromAdmin ? .white : .primary)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+            VStack(alignment: message.isFromAdmin ? .trailing : .leading) {
+                if !message.isFromAdmin {
+                    Text(message.senderName)
+                        .font(.caption)
+                        .foregroundStyle(.gray)
+                }
+                
+                Text(message.content)
+                    .padding(10)
+                    .background(message.isFromAdmin ? .blue : .gray.opacity(0.2))
+                    .foregroundStyle(message.isFromAdmin ? .white : .primary)
+                    .cornerRadius(16)
+            }
             
             if !message.isFromAdmin {
                 Spacer()
