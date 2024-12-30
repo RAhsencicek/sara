@@ -26,23 +26,140 @@ struct MockMessage: Identifiable {
 
 struct AdminChatView: View {
     @State private var selectedChat: MockChat?
+    @State private var showingBulkMessageSheet = false
+    @State private var bulkMessage = ""
+    @State private var selectedGroups: Set<String> = []
+    @FocusState private var isMessageFieldFocused: Bool
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(getChats()) { chat in
-                    Button(action: {
-                        selectedChat = chat
-                    }) {
-                        ChatRowView(chat: chat)
+            VStack {
+                List {
+                    Section {
+                        Button(action: {
+                            showingBulkMessageSheet = true
+                            // Varsayılan olarak tüm grupları seç
+                            selectedGroups = Set(getChats().map { $0.id })
+                        }) {
+                            Label("Toplu Mesaj Gönder", systemImage: "message.badge.circle.fill")
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                    
+                    Section {
+                        ForEach(getChats()) { chat in
+                            Button(action: {
+                                selectedChat = chat
+                            }) {
+                                ChatRowView(chat: chat)
+                            }
+                        }
+                    }
+                }
+                .navigationTitle("Grup Mesajları")
+                .sheet(item: $selectedChat) { chat in
+                    ChatDetailView(chat: chat)
+                }
+                .sheet(isPresented: $showingBulkMessageSheet) {
+                    NavigationView {
+                        VStack(spacing: 0) {
+                            List {
+                                Section {
+                                    HStack {
+                                        Text("Tüm Grupları Seç")
+                                        Spacer()
+                                        Toggle("", isOn: Binding(
+                                            get: {
+                                                selectedGroups.count == getChats().count
+                                            },
+                                            set: { newValue in
+                                                if newValue {
+                                                    selectedGroups = Set(getChats().map { $0.id })
+                                                } else {
+                                                    selectedGroups.removeAll()
+                                                }
+                                            }
+                                        ))
+                                    }
+                                }
+                                
+                                Section("Alıcı Gruplar") {
+                                    ForEach(getChats()) { chat in
+                                        HStack {
+                                            Text(chat.groupName)
+                                            Spacer()
+                                            Image(systemName: selectedGroups.contains(chat.id) ? "checkmark.circle.fill" : "circle")
+                                                .foregroundStyle(selectedGroups.contains(chat.id) ? .blue : .gray)
+                                        }
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            if selectedGroups.contains(chat.id) {
+                                                selectedGroups.remove(chat.id)
+                                            } else {
+                                                selectedGroups.insert(chat.id)
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                if !selectedGroups.isEmpty {
+                                    Section("Mesajınız") {
+                                        TextEditor(text: $bulkMessage)
+                                            .frame(height: 100)
+                                            .focused($isMessageFieldFocused)
+                                    }
+                                }
+                            }
+                            
+                            // Seçili grup sayısı ve gönder butonu
+                            VStack(spacing: 8) {
+                                if !selectedGroups.isEmpty {
+                                    Text("\(selectedGroups.count) grup seçildi")
+                                        .font(.caption)
+                                        .foregroundStyle(.gray)
+                                }
+                                
+                                Button(action: sendBulkMessage) {
+                                    Text("Gönder")
+                                        .font(.headline)
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background((!selectedGroups.isEmpty && !bulkMessage.isEmpty) ? .blue : .gray)
+                                        .cornerRadius(10)
+                                }
+                                .disabled(selectedGroups.isEmpty || bulkMessage.isEmpty)
+                            }
+                            .padding()
+                        }
+                        .navigationTitle("Toplu Mesaj")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("İptal") {
+                                    showingBulkMessageSheet = false
+                                    selectedGroups.removeAll()
+                                    bulkMessage = ""
+                                }
+                            }
+                        }
+                        .onAppear {
+                            isMessageFieldFocused = true
+                        }
                     }
                 }
             }
-            .navigationTitle("Grup Mesajları")
-            .sheet(item: $selectedChat) { chat in
-                ChatDetailView(chat: chat)
-            }
         }
+    }
+    
+    private func sendBulkMessage() {
+        // TODO: Implement bulk message sending
+        print("Mesaj gönderilecek gruplar: \(selectedGroups)")
+        print("Mesaj içeriği: \(bulkMessage)")
+        
+        showingBulkMessageSheet = false
+        selectedGroups.removeAll()
+        bulkMessage = ""
     }
     
     func getChats() -> [MockChat] {
