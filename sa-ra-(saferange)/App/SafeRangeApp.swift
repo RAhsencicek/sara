@@ -16,7 +16,7 @@ struct SafeRangeApp: App {
         WindowGroup {
             if appViewModel.isAuthenticated {
                 if appViewModel.currentUser?.role == .admin {
-                    AdminView()
+                    AdminTabView()
                         .environmentObject(appViewModel)
                 } else {
                     MainTabView()
