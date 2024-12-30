@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AdminView: View {
     @EnvironmentObject var appViewModel: AppViewModel
+    @StateObject private var groupViewModel = GroupViewModel()
     @State private var selectedGroup: Group?
     @State private var showingCreateGroupSheet = false
     
@@ -26,17 +27,18 @@ struct AdminView: View {
                     }
                     
                     // Mevcut Gruplar
-                    ForEach(MockData.groups) { group in
+                    ForEach(groupViewModel.groups) { group in
                         NavigationLink(destination: AdminGroupDetailView(group: group)) {
                             VStack(alignment: .leading) {
                                 Text(group.name)
                                     .font(.headline)
-                                Text("\(MockData.getMemberCount(for: group.id)) Üye")
+                                Text("\(group.description ?? "")")
                                     .font(.caption)
                                     .foregroundStyle(.gray)
                             }
                         }
                     }
+                    .onDelete(perform: groupViewModel.deleteGroup)
                 }
                 
                 // Bluetooth Yönetimi
@@ -59,24 +61,16 @@ struct AdminView: View {
             .navigationTitle("Rehber Paneli")
             .sheet(isPresented: $showingCreateGroupSheet) {
                 CreateGroupView()
+                    .environmentObject(groupViewModel)
             }
         }
     }
 }
 
-// Geçici mock data
-struct MockData {
-    static let groups = [
-        Group(id: "1", name: "Roma Turu", description: "7 günlük Roma turu", guideId: "guide1", startDate: Date(), endDate: Date().addingTimeInterval(7*24*60*60), isActive: true),
-        Group(id: "2", name: "Paris Turu", description: "5 günlük Paris turu", guideId: "guide2", startDate: Date(), endDate: Date().addingTimeInterval(5*24*60*60), isActive: true)
-    ]
-    
-    static func getMemberCount(for groupId: String) -> Int {
-        return Int.random(in: 5...20) // Mock veri
+// Preview
+struct AdminView_Previews: PreviewProvider {
+    static var previews: some View {
+        AdminView()
+            .environmentObject(AppViewModel())
     }
-}
-
-#Preview {
-    AdminView()
-        .environmentObject(AppViewModel())
 }

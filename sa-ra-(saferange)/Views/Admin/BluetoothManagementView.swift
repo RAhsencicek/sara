@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+struct BluetoothDevice: Identifiable {
+    let id: String
+    let name: String
+    let signalStrength: Double // 0.0 to 1.0
+}
+
 struct BluetoothManagementView: View {
     @State private var isBluetoothEnabled = true
     @State private var selectedRange = 10.0 // metre cinsinden
@@ -31,7 +37,7 @@ struct BluetoothManagementView: View {
             
             if isBluetoothEnabled {
                 Section("Bağlı Cihazlar") {
-                    ForEach(MockData.getConnectedDevices()) { device in
+                    ForEach(getConnectedDevices()) { device in
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(device.name)
@@ -51,7 +57,7 @@ struct BluetoothManagementView: View {
                 }
                 
                 Section("Yakındaki Cihazlar") {
-                    ForEach(MockData.getNearbyDevices()) { device in
+                    ForEach(getNearbyDevices()) { device in
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(device.name)
@@ -73,11 +79,8 @@ struct BluetoothManagementView: View {
         }
         .navigationTitle("Bluetooth Yönetimi")
     }
-}
-
-// Mock data için yardımcı yapılar
-extension MockData {
-    static func getConnectedDevices() -> [BluetoothDevice] {
+    
+    private func getConnectedDevices() -> [BluetoothDevice] {
         return [
             BluetoothDevice(id: "Device-001", name: "iPhone 12", signalStrength: 0.9),
             BluetoothDevice(id: "Device-002", name: "iPhone 13", signalStrength: 0.6),
@@ -85,18 +88,12 @@ extension MockData {
         ]
     }
     
-    static func getNearbyDevices() -> [BluetoothDevice] {
+    private func getNearbyDevices() -> [BluetoothDevice] {
         return [
             BluetoothDevice(id: "Device-004", name: "iPhone 11", signalStrength: 0.4),
             BluetoothDevice(id: "Device-005", name: "iPhone SE", signalStrength: 0.7)
         ]
     }
-}
-
-struct BluetoothDevice: Identifiable {
-    let id: String
-    let name: String
-    let signalStrength: Double // 0.0 to 1.0
 }
 
 #Preview {

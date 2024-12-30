@@ -7,13 +7,30 @@
 
 import SwiftUI
 
+// Mock veri yapıları
+struct MockChat: Identifiable {
+    let id: String
+    let groupName: String
+    let lastMessage: String
+    let lastMessageTime: String
+    let unreadCount: Int
+    let messages: [MockMessage]
+}
+
+struct MockMessage: Identifiable {
+    let id: String
+    let content: String
+    let timestamp: Date
+    let isFromAdmin: Bool
+}
+
 struct AdminChatView: View {
     @State private var selectedChat: MockChat?
     
     var body: some View {
         NavigationView {
             List {
-                ForEach(MockData.getChats()) { chat in
+                ForEach(getChats()) { chat in
                     Button(action: {
                         selectedChat = chat
                     }) {
@@ -26,6 +43,34 @@ struct AdminChatView: View {
                 ChatDetailView(chat: chat)
             }
         }
+    }
+    
+    func getChats() -> [MockChat] {
+        return [
+            MockChat(
+                id: "1",
+                groupName: "Roma Turu",
+                lastMessage: "Yarın saat 9'da buluşuyoruz",
+                lastMessageTime: "14:30",
+                unreadCount: 3,
+                messages: [
+                    MockMessage(id: "1", content: "Merhaba grup!", timestamp: Date(), isFromAdmin: true),
+                    MockMessage(id: "2", content: "Yarın saat 9'da buluşuyoruz", timestamp: Date(), isFromAdmin: true),
+                    MockMessage(id: "3", content: "Tamam, teşekkürler", timestamp: Date(), isFromAdmin: false)
+                ]
+            ),
+            MockChat(
+                id: "2",
+                groupName: "Paris Turu",
+                lastMessage: "Hava durumu nasıl?",
+                lastMessageTime: "13:15",
+                unreadCount: 0,
+                messages: [
+                    MockMessage(id: "4", content: "Herkese iyi günler", timestamp: Date(), isFromAdmin: true),
+                    MockMessage(id: "5", content: "Hava durumu nasıl?", timestamp: Date(), isFromAdmin: false)
+                ]
+            )
+        ]
     }
 }
 
@@ -136,53 +181,6 @@ struct MessageBubbleView: View {
                 Spacer()
             }
         }
-    }
-}
-
-// Mock veri yapıları
-struct MockChat: Identifiable {
-    let id: String
-    let groupName: String
-    let lastMessage: String
-    let lastMessageTime: String
-    let unreadCount: Int
-    let messages: [MockMessage]
-}
-
-struct MockMessage: Identifiable {
-    let id: String
-    let content: String
-    let timestamp: Date
-    let isFromAdmin: Bool
-}
-
-extension MockData {
-    static func getChats() -> [MockChat] {
-        return [
-            MockChat(
-                id: "1",
-                groupName: "Roma Turu",
-                lastMessage: "Yarın saat 9'da buluşuyoruz",
-                lastMessageTime: "14:30",
-                unreadCount: 3,
-                messages: [
-                    MockMessage(id: "1", content: "Merhaba grup!", timestamp: Date(), isFromAdmin: true),
-                    MockMessage(id: "2", content: "Yarın saat 9'da buluşuyoruz", timestamp: Date(), isFromAdmin: true),
-                    MockMessage(id: "3", content: "Tamam, teşekkürler", timestamp: Date(), isFromAdmin: false)
-                ]
-            ),
-            MockChat(
-                id: "2",
-                groupName: "Paris Turu",
-                lastMessage: "Hava durumu nasıl?",
-                lastMessageTime: "13:15",
-                unreadCount: 0,
-                messages: [
-                    MockMessage(id: "4", content: "Herkese iyi günler", timestamp: Date(), isFromAdmin: true),
-                    MockMessage(id: "5", content: "Hava durumu nasıl?", timestamp: Date(), isFromAdmin: false)
-                ]
-            )
-        ]
     }
 }
 

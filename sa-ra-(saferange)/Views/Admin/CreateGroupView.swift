@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CreateGroupView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var groupViewModel: GroupViewModel
     
     @State private var groupName = ""
     @State private var groupDescription = ""
@@ -65,8 +66,15 @@ struct CreateGroupView: View {
             return
         }
         
-        // TODO: Grup oluşturma API çağrısı yapılacak
-        // Şimdilik sadece kapatıyoruz
+        // Grup oluştur
+        groupViewModel.createGroup(
+            name: groupName,
+            description: groupDescription,
+            startDate: startDate,
+            endDate: endDate
+        )
+        
+        // Sayfayı kapat
         dismiss()
     }
     

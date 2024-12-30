@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+// Mock yapılar
+struct MockMember: Identifiable {
+    let id: String
+    let name: String
+    let phone: String
+    let bluetoothEnabled: Bool
+}
+
 struct AdminGroupDetailView: View {
     let group: Group
     
@@ -39,7 +47,7 @@ struct AdminGroupDetailView: View {
                         .foregroundStyle(.blue)
                 }
                 
-                ForEach(MockData.getMembers()) { member in
+                ForEach(getMembers()) { member in
                     HStack {
                         VStack(alignment: .leading) {
                             Text(member.name)
@@ -90,24 +98,14 @@ struct AdminGroupDetailView: View {
         // TODO: Implement message sending
         newMessage = ""
     }
-}
-
-// Mock data için yardımcı yapılar
-extension MockData {
-    static func getMembers() -> [MockMember] {
+    
+    private func getMembers() -> [MockMember] {
         return [
             MockMember(id: "1", name: "Ahmet Yılmaz", phone: "+90 555 111 2233", bluetoothEnabled: true),
             MockMember(id: "2", name: "Ayşe Demir", phone: "+90 555 444 5566", bluetoothEnabled: false),
             MockMember(id: "3", name: "Mehmet Kaya", phone: "+90 555 777 8899", bluetoothEnabled: true)
         ]
     }
-}
-
-struct MockMember: Identifiable {
-    let id: String
-    let name: String
-    let phone: String
-    let bluetoothEnabled: Bool
 }
 
 // Placeholder Views
