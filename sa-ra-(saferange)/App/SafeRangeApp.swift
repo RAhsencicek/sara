@@ -15,8 +15,13 @@ struct SafeRangeApp: App {
     var body: some Scene {
         WindowGroup {
             if appViewModel.isAuthenticated {
-                MainTabView()
-                    .environmentObject(appViewModel)
+                if appViewModel.currentUser?.role == .admin {
+                    AdminView()
+                        .environmentObject(appViewModel)
+                } else {
+                    MainTabView()
+                        .environmentObject(appViewModel)
+                }
             } else {
                 LoginView()
                     .environmentObject(appViewModel)

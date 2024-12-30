@@ -119,14 +119,25 @@ class APIService {
         // Şimdilik test için mock yanıt
         try await Task.sleep(nanoseconds: 1_000_000_000) // 1 saniye bekle
         
+        // Test kodlarına göre farklı roller atama
+        let role: UserRole
+        switch code {
+        case "1111":
+            role = .user
+        case "2222":
+            role = .admin
+        default:
+            throw APIError.serverError("Geçersiz doğrulama kodu")
+        }
+        
         // Test için örnek kullanıcı
         let user = User(
             id: "test123",
             phoneNumber: phoneNumber,
-            firstName: "Test",
+            firstName: role == .admin ? "Admin" : "Test",
             lastName: "User",
             email: "test@example.com",
-            role: .user,
+            role: role,
             isVerified: true,
             status: .active
         )
