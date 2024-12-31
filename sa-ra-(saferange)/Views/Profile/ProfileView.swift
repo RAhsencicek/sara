@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @EnvironmentObject var appViewModel: AppViewModel
     @State private var isEditingProfile = false
     @State private var showingSettings = false
     
@@ -60,7 +61,7 @@ struct ProfileView: View {
                 
                 Section {
                     Button(action: {
-                        // TODO: Implement logout
+                        appViewModel.logout()
                     }) {
                         HStack {
                             Text("Çıkış Yap")
