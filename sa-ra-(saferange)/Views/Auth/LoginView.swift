@@ -17,6 +17,9 @@ struct LoginView: View {
     @State private var isShowingVerification: Bool = false
     @State private var isLoading: Bool = false
     @State private var errorMessage: String = ""
+    @State private var isShowingRegistration: Bool = false
+    @State private var name: String = ""
+    @State private var email: String = ""
     
     var body: some View {
         NavigationView {
@@ -33,11 +36,14 @@ struct LoginView: View {
                     .foregroundStyle(.gray)
                     .padding(.bottom, 50)
                 
-                if !isShowingVerification {
-                    // Telefon numarası girişi
-                    phoneNumberView
+                if !isShowingVerification && !isShowingRegistration {
+                    // Giriş ekranı
+                    loginView
+                } else if isShowingRegistration {
+                    // Kayıt ekranı
+                    registrationView
                 } else {
-                    // Doğrulama kodu girişi
+                    // Doğrulama kodu ekranı
                     verificationView
                 }
                 
@@ -49,6 +55,17 @@ struct LoginView: View {
                 }
                 
                 Spacer()
+                
+                if !isShowingVerification && !isShowingRegistration {
+                    // Hesap oluştur butonu
+                    Button(action: {
+                        isShowingRegistration = true
+                    }) {
+                        Text("Hesabınız yok mu? Hesap Oluşturun")
+                            .foregroundStyle(.blue)
+                    }
+                    .padding(.bottom)
+                }
             }
             .padding()
             .disabled(isLoading)
@@ -60,8 +77,8 @@ struct LoginView: View {
         }
     }
     
-    // Telefon numarası giriş ekranı
-    private var phoneNumberView: some View {
+    // Giriş ekranı
+    private var loginView: some View {
         VStack(spacing: 20) {
             TextField("Telefon Numarası", text: $phoneNumber)
                 .keyboardType(.phonePad)
@@ -71,12 +88,57 @@ struct LoginView: View {
                 .cornerRadius(10)
             
             Button(action: sendVerificationCode) {
-                Text("Doğrulama Kodu Gönder")
+                Text("Giriş Yap")
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.blue)
                     .foregroundStyle(.white)
                     .cornerRadius(10)
+            }
+        }
+    }
+    
+    // Kayıt ekranı
+    private var registrationView: some View {
+        VStack(spacing: 20) {
+            TextField("Ad Soyad", text: $name)
+                .textContentType(.name)
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(10)
+            
+            TextField("Telefon Numarası", text: $phoneNumber)
+                .keyboardType(.phonePad)
+                .textContentType(.telephoneNumber)
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(10)
+            
+            TextField("E-posta", text: $email)
+                .keyboardType(.emailAddress)
+                .textContentType(.emailAddress)
+                .padding()
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(10)
+            
+            Button(action: register) {
+                Text("Hesap Oluştur")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundStyle(.white)
+                    .cornerRadius(10)
+            }
+            
+            Button(action: {
+                isShowingRegistration = false
+                phoneNumber = ""
+                name = ""
+                email = ""
+                errorMessage = ""
+            }) {
+                Text("Geri Dön")
+                    .foregroundStyle(.blue)
             }
         }
     }
@@ -175,6 +237,12 @@ struct LoginView: View {
         isShowingVerification = false
         verificationCode = ""
         errorMessage = ""
+    }
+    
+    // Kayıt işlemi
+    private func register() {
+        // TODO: Implement registration
+        isShowingVerification = true
     }
     
     // Telefon numarası formatı
