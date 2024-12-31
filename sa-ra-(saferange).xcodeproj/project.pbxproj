@@ -17,6 +17,7 @@
 		046764562D23E83100D4A846 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 046764552D23E83100D4A846 /* FirebaseFirestore */; };
 		046764582D23E83100D4A846 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 046764572D23E83100D4A846 /* FirebaseMessaging */; };
 		0467645A2D23E83100D4A846 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 046764592D23E83100D4A846 /* FirebaseStorage */; };
+		0467645E2D2400D000D4A846 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 0467645D2D2400D000D4A846 /* FirebaseFirestoreCombine-Community */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +68,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				046764582D23E83100D4A846 /* FirebaseMessaging in Frameworks */,
+				0467645E2D2400D000D4A846 /* FirebaseFirestoreCombine-Community in Frameworks */,
 				0467644E2D23E83100D4A846 /* FirebaseAnalytics in Frameworks */,
 				046764542D23E83100D4A846 /* FirebaseCrashlytics in Frameworks */,
 				046764522D23E83100D4A846 /* FirebaseCore in Frameworks */,
@@ -141,6 +143,7 @@
 				046764552D23E83100D4A846 /* FirebaseFirestore */,
 				046764572D23E83100D4A846 /* FirebaseMessaging */,
 				046764592D23E83100D4A846 /* FirebaseStorage */,
+				0467645D2D2400D000D4A846 /* FirebaseFirestoreCombine-Community */,
 			);
 			productName = "sa-ra-(saferange)";
 			productReference = 04DB4C382D21E4E700780699 /* sa-ra-(saferange).app */;
@@ -640,6 +643,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0467644C2D23E83100D4A846 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		0467645D2D2400D000D4A846 /* FirebaseFirestoreCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0467644C2D23E83100D4A846 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseFirestoreCombine-Community";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

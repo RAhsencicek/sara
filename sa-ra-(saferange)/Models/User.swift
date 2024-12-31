@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import FirebaseFirestore
+import FirebaseFirestoreSwift
 
 // Kullanıcı rolleri için enum
 enum UserRole: String, Codable {
@@ -23,8 +25,8 @@ enum UserStatus: String, Codable {
 
 // Kullanıcı modeli
 struct User: Codable, Identifiable {
-    // API'den gelen ID
-    let id: String
+    // Firebase ID
+    @DocumentID var id: String?
     
     // Temel bilgiler
     let phoneNumber: String
@@ -33,31 +35,35 @@ struct User: Codable, Identifiable {
     var email: String?
     
     // Sistem bilgileri
-    let role: UserRole
-    let isVerified: Bool
-    let status: UserStatus
+    var role: UserRole = .user
+    var isVerified: Bool = false
+    var status: UserStatus = .active
     
-    // Özel CodingKeys tanımlaması
-    enum CodingKeys: String, CodingKey {
-        case id = "_id"
-        case phoneNumber
-        case firstName
-        case lastName
-        case email
-        case role
-        case isVerified
-        case status
+    // Zaman damgaları
+    let createdAt: Date
+    var updatedAt: Date
+    
+    // Firebase'den veri oluşturma
+    static func fromFirebaseUser(_ firebaseUser: FirebaseAuth.User) -> User {
+        return User(
+            phoneNumber: firebaseUser.phoneNumber ?? "",
+            createdAt: firebaseUser.metadata.creationDate ?? Date(),
+            updatedAt: firebaseUser.metadata.lastSignInDate ?? Date()
+        )
     }
     
-    // Tam adı döndüren hesaplanmış özellik
-    var fullName: String {
-        if let firstName = firstName, let lastName = lastName {
-            return "\(firstName) \(lastName)"
-        } else if let firstName = firstName {
-            return firstName
-        } else if let lastName = lastName {
-            return lastName
-        }
-        return phoneNumber
+    // Firestore'a kaydetmek için
+    func toFirestore() -> [String: Any] {
+        return [
+            "phoneNumber": phoneNumber,
+            "firstName": firstName as Any,
+            "lastName": lastName as Any,
+            "email": email as Any,
+            "role": role.rawValue,
+            "isVerified": isVerified,
+            "status": status.rawValue,
+            "createdAt": createdAt,
+            "updatedAt": updatedAt
+        ]
     }
 }

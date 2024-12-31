@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import FirebaseAuth
 
 class AppViewModel: ObservableObject {
     // Kullanıcının giriş durumunu tutan değişken
@@ -15,46 +16,78 @@ class AppViewModel: ObservableObject {
     // Kullanıcı bilgilerini tutan değişken
     @Published var currentUser: User?
     
-    // JWT token'ları tutan değişkenler
-    @Published private(set) var accessToken: String?
-    @Published private(set) var refreshToken: String?
+    // Doğrulama ID'sini tutan değişken
+    @Published var verificationID: String?
     
-    // UserDefaults anahtarları
-    private let tokenKey = "accessToken"
-    private let refreshTokenKey = "refreshToken"
+    // Hata mesajını tutan değişken
+    @Published var errorMessage: String?
+    
+    // Loading durumunu tutan değişken
+    @Published var isLoading: Bool = false
+    
+    private let authManager = AuthManager.shared
     
     init() {
-        // UserDefaults'tan token'ları yükle
-        self.loadTokens()
-        
-        // Token varsa kullanıcıyı giriş yapmış olarak işaretle
-        self.isAuthenticated = accessToken != nil
+        // Firebase Auth durumunu dinle
+        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            self?.isAuthenticated = user != nil
+            self?.currentUser = user
+        }
     }
     
-    // Token'ları kaydet
-    func saveTokens(accessToken: String, refreshToken: String) {
-        UserDefaults.standard.set(accessToken, forKey: tokenKey)
-        UserDefaults.standard.set(refreshToken, forKey: refreshTokenKey)
+    // Telefon numarasına doğrulama kodu gönder
+    func sendVerificationCode(to phoneNumber: String) {
+        isLoading = true
+        errorMessage = nil
         
-        self.accessToken = accessToken
-        self.refreshToken = refreshToken
-        self.isAuthenticated = true
+        authManager.sendVerificationCode(to: phoneNumber) { [weak self] result in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                
+                switch result {
+                case .success(let verificationID):
+                    self?.verificationID = verificationID
+                case .failure(let error):
+                    self?.errorMessage = error.localizedDescription
+                }
+            }
+        }
     }
     
-    // Token'ları yükle
-    private func loadTokens() {
-        self.accessToken = UserDefaults.standard.string(forKey: tokenKey)
-        self.refreshToken = UserDefaults.standard.string(forKey: refreshTokenKey)
+    // Doğrulama kodunu kontrol et
+    func verifyCode(_ code: String) {
+        guard let verificationID = verificationID else {
+            errorMessage = "Doğrulama ID'si bulunamadı"
+            return
+        }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        authManager.verifyCode(code, verificationID: verificationID) { [weak self] result in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                
+                switch result {
+                case .success(let user):
+                    self?.currentUser = user
+                    self?.isAuthenticated = true
+                case .failure(let error):
+                    self?.errorMessage = error.localizedDescription
+                }
+            }
+        }
     }
     
     // Çıkış yap
     func logout() {
-        UserDefaults.standard.removeObject(forKey: tokenKey)
-        UserDefaults.standard.removeObject(forKey: refreshTokenKey)
-        
-        self.accessToken = nil
-        self.refreshToken = nil
-        self.currentUser = nil
-        self.isAuthenticated = false
+        do {
+            try authManager.signOut()
+            isAuthenticated = false
+            currentUser = nil
+            verificationID = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

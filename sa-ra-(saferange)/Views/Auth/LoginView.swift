@@ -6,18 +6,14 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct LoginView: View {
-    // ViewModel'e erişim
     @EnvironmentObject var appViewModel: AppViewModel
     
-    // State değişkenleri
     @State private var phoneNumber: String = ""
     @State private var verificationCode: String = ""
     @State private var isShowingVerification: Bool = false
-    @State private var isLoading: Bool = false
-    @State private var errorMessage: String = ""
-    @State private var isShowingRegistration: Bool = false
     @State private var name: String = ""
     @State private var email: String = ""
     
@@ -36,41 +32,27 @@ struct LoginView: View {
                     .foregroundStyle(.gray)
                     .padding(.bottom, 50)
                 
-                if !isShowingVerification && !isShowingRegistration {
+                if !isShowingVerification {
                     // Giriş ekranı
                     loginView
-                } else if isShowingRegistration {
-                    // Kayıt ekranı
-                    registrationView
                 } else {
                     // Doğrulama kodu ekranı
                     verificationView
                 }
                 
                 // Hata mesajı
-                if !errorMessage.isEmpty {
-                    Text(errorMessage)
+                if let error = appViewModel.errorMessage {
+                    Text(error)
                         .foregroundStyle(.red)
                         .font(.caption)
                 }
                 
                 Spacer()
-                
-                if !isShowingVerification && !isShowingRegistration {
-                    // Hesap oluştur butonu
-                    Button(action: {
-                        isShowingRegistration = true
-                    }) {
-                        Text("Hesabınız yok mu? Hesap Oluşturun")
-                            .foregroundStyle(.blue)
-                    }
-                    .padding(.bottom)
-                }
             }
             .padding()
-            .disabled(isLoading)
+            .disabled(appViewModel.isLoading)
             .overlay {
-                if isLoading {
+                if appViewModel.isLoading {
                     ProgressView()
                 }
             }
@@ -80,65 +62,25 @@ struct LoginView: View {
     // Giriş ekranı
     private var loginView: some View {
         VStack(spacing: 20) {
-            TextField("Telefon Numarası", text: $phoneNumber)
-                .keyboardType(.phonePad)
-                .textContentType(.telephoneNumber)
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
+            HStack {
+                Text("+90")
+                    .foregroundStyle(.gray)
+                
+                TextField("5XX XXX XX XX", text: $phoneNumber)
+                    .keyboardType(.phonePad)
+                    .textContentType(.telephoneNumber)
+            }
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(10)
             
             Button(action: sendVerificationCode) {
-                Text("Giriş Yap")
+                Text("Doğrulama Kodu Gönder")
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.blue)
                     .foregroundStyle(.white)
                     .cornerRadius(10)
-            }
-        }
-    }
-    
-    // Kayıt ekranı
-    private var registrationView: some View {
-        VStack(spacing: 20) {
-            TextField("Ad Soyad", text: $name)
-                .textContentType(.name)
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
-            
-            TextField("Telefon Numarası", text: $phoneNumber)
-                .keyboardType(.phonePad)
-                .textContentType(.telephoneNumber)
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
-            
-            TextField("E-posta", text: $email)
-                .keyboardType(.emailAddress)
-                .textContentType(.emailAddress)
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
-            
-            Button(action: register) {
-                Text("Hesap Oluştur")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundStyle(.white)
-                    .cornerRadius(10)
-            }
-            
-            Button(action: {
-                isShowingRegistration = false
-                phoneNumber = ""
-                name = ""
-                email = ""
-                errorMessage = ""
-            }) {
-                Text("Geri Dön")
-                    .foregroundStyle(.blue)
             }
         }
     }
@@ -172,85 +114,36 @@ struct LoginView: View {
     // Doğrulama kodu gönderme
     private func sendVerificationCode() {
         guard !phoneNumber.isEmpty else {
-            errorMessage = "Lütfen telefon numaranızı girin"
+            appViewModel.errorMessage = "Lütfen telefon numaranızı girin"
             return
         }
         
         // Telefon numarası formatını düzenle
         let formattedPhone = formatPhoneNumber(phoneNumber)
-        
-        isLoading = true
-        errorMessage = ""
-        
-        Task {
-            do {
-                _ = try await APIService.shared.sendVerificationCode(phoneNumber: formattedPhone)
-                
-                DispatchQueue.main.async {
-                    isLoading = false
-                    isShowingVerification = true
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    isLoading = false
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
+        appViewModel.sendVerificationCode(to: formattedPhone)
+        isShowingVerification = true
     }
     
     // Doğrulama kodunu kontrol etme
     private func verifyCode() {
         guard !verificationCode.isEmpty else {
-            errorMessage = "Lütfen doğrulama kodunu girin"
+            appViewModel.errorMessage = "Lütfen doğrulama kodunu girin"
             return
         }
         
-        let formattedPhone = formatPhoneNumber(phoneNumber)
-        
-        isLoading = true
-        errorMessage = ""
-        
-        Task {
-            do {
-                let (user, accessToken, refreshToken) = try await APIService.shared.verifyCode(
-                    phoneNumber: formattedPhone,
-                    code: verificationCode
-                )
-                
-                DispatchQueue.main.async {
-                    isLoading = false
-                    appViewModel.currentUser = user
-                    appViewModel.saveTokens(accessToken: accessToken, refreshToken: refreshToken)
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    isLoading = false
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
+        appViewModel.verifyCode(verificationCode)
     }
     
     // Görünümü sıfırlama
     private func resetView() {
         isShowingVerification = false
         verificationCode = ""
-        errorMessage = ""
-    }
-    
-    // Kayıt işlemi
-    private func register() {
-        // TODO: Implement registration
-        isShowingVerification = true
+        appViewModel.errorMessage = nil
     }
     
     // Telefon numarası formatı
     private func formatPhoneNumber(_ number: String) -> String {
         let digits = number.filter { $0.isNumber }
-        if !digits.hasPrefix("90") {
-            return "+90\(digits)"
-        }
-        return "+\(digits)"
+        return "+90\(digits)"
     }
 }
